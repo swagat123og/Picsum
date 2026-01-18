@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchGif, fetchPhoto, fetchVideos } from '../api/mediaApi'
 import { setError, setLoading, setQuery, setResults } from '../redux/features/searchSlice'
+import ResultsCard from './ResultsCard'
 
 const ResultGrid = () => {
     const {query,activeTab,results,loading, error}=useSelector((store)=>store.search);
@@ -20,7 +21,6 @@ const ResultGrid = () => {
             title:e.alt_description,
             thumbnail:e.urls.small,
             src:e.urls.full
-
           }))
          }
          if(activeTab=='videos'){
@@ -49,13 +49,18 @@ const ResultGrid = () => {
         }
      }
      getData()
-    },[query,activeTab])
+    },[query,activeTab,dispatch])
 
     if(error) return <h1>Error</h1>
     if(loading) return <h1>Loading....</h1>
      
   return (
-    <div>
+    <div className='flex flex-wrap gap-5 rounded-3xl overflow-auto px-10 py-6 justify-center'>
+      {results.map((e,idx)=>{
+        return (<div key={idx}>
+          <ResultsCard  e={e}/>
+        </div>)
+      })}
     </div>
   )
 }

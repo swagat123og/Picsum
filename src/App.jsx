@@ -35,7 +35,7 @@ const App = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-gray-900 text-white">
+    <div className="w-full bg-gray-900 text-white">
       <SearchBar/>
       <Tabs/>
       <ResultGrid/>
