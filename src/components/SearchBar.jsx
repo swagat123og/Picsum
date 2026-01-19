@@ -1,45 +1,42 @@
-import React, { useState } from 'react'
-import {useDispatch} from 'react-redux'
-import { setQuery } from '../redux/features/searchSlice';
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setQuery } from "../redux/features/searchSlice";
+
 const SearchBar = () => {
+  const [text, setText] = useState("");
+  const dispatch = useDispatch();
 
-
-  const[text,setText]=useState('');
-  const dispatch=useDispatch()
-  const submitHandler=(e)=>{
+  const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(setQuery(text))
-    setText('')
-  }
+    dispatch(setQuery(text));
+    setText("");
+  };
 
   return (
-    <div>
-      <form className="flex items-center gap-3 p-4 rounded-xl shadow-lg"
-      onSubmit={(e)=>{
-       submitHandler(e)
-      }}>
+    <form
+      onSubmit={submitHandler}
+      className="flex items-center gap-3 p-3 rounded-2xl bg-[#111827] border border-white/10 shadow-lg focus-within:ring-2 focus-within:ring-white/10 transition"
+    >
+      {/* Input */}
       <input
         type="text"
         required
         value={text}
-        onChange={(e)=>{
-            setText(e.target.value)
-        }}
-        placeholder="Enter the text"
-        className="w-full px-4 py-2 border text-white border-gray-300 rounded-lg
-                   focus:outline-none focus:ring-2 focus:ring-indigo-500
-                   transition"
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Search photos, videos, GIFs..."
+        className="w-full bg-transparent px-4 py-3 text-sm text-gray-200 placeholder-gray-500 outline-none"
       />
 
+      {/* Button */}
       <button
-        className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg
-                   hover:bg-indigo-700 active:scale-95 transition"
+        type="submit"
+        className="px-5 py-2.5 rounded-xl bg-white text-black text-sm font-medium
+                   hover:bg-gray-200 active:scale-95 transition-all"
       >
         Search
       </button>
     </form>
-    </div>
-  )
-}
+  );
+};
 
-export default SearchBar
+export default SearchBar;
