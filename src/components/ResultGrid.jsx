@@ -23,17 +23,9 @@ const ResultGrid = () => {
 
   const dispatch = useDispatch();
 
-  // 🛑 Nothing searched
-  if (typeof query !== "string" || !query.trim()) {
-    return (
-      <p className="text-center text-gray-500 py-20">
-        Start typing to search photos, videos or GIFs 🔍
-      </p>
-    );
-  }
-
+  // ✅ Hooks MUST be first
   useEffect(() => {
-    if (!query.trim()) return;
+    if (!query || !query.trim()) return;
 
     const getData = async () => {
       try {
@@ -42,45 +34,57 @@ const ResultGrid = () => {
 
         if (activeTab === "photos") {
           const res = await fetchPhoto(query, page);
-          data = res?.results?.map((e) => ({
-            id: e.id,
-            type: "photo",
-            title: e.alt_description,
-            thumbnail: e.urls.small,
-            src: e.urls.full,
-          })) || [];
+          data =
+            res?.results?.map((e) => ({
+              id: e.id,
+              type: "photo",
+              title: e.alt_description,
+              thumbnail: e.urls.small,
+              src: e.urls.full,
+            })) || [];
         }
 
         if (activeTab === "videos") {
           const res = await fetchVideos(query, page);
-          data = res?.videos?.map((e) => ({
-            id: e.id,
-            type: "video",
-            title: e.user?.name || "Video",
-            thumbnail: e.image,
-            src: e.video_files?.[0]?.link,
-          })) || [];
+          data =
+            res?.videos?.map((e) => ({
+              id: e.id,
+              type: "video",
+              title: e.user?.name || "Video",
+              thumbnail: e.image,
+              src: e.video_files?.[0]?.link,
+            })) || [];
         }
 
         if (activeTab === "gifs") {
           const res = await fetchGif(query, page);
-          data = res?.results?.map((e) => ({
-            id: e.id,
-            type: "gif",
-            title: e.title || "GIF",
-            thumbnail: e.media_formats?.tinygif?.url,
-            src: e.media_formats?.gif?.url,
-          })) || [];
+          data =
+            res?.results?.map((e) => ({
+              id: e.id,
+              type: "gif",
+              title: e.title || "GIF",
+              thumbnail: e.media_formats?.tinygif?.url,
+              src: e.media_formats?.gif?.url,
+            })) || [];
         }
 
         dispatch(setResults(data));
       } catch (err) {
-        dispatch(setError(err?.message || "Failed to load data"));
+        dispatch(setError(err?.message || "Failed to load"));
       }
     };
 
     getData();
   }, [query, activeTab, page, dispatch]);
+
+  // 🔻 Safe UI guards AFTER hooks
+  if (!query || !query.trim()) {
+    return (
+      <p className="text-center text-gray-500 py-20">
+        Start typing to search photos, videos or GIFs 🔍
+      </p>
+    );
+  }
 
   if (loading && page === 1)
     return <p className="text-center text-gray-400 py-20">Loading...</p>;
