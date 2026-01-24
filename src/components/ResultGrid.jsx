@@ -1,87 +1,116 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGif, fetchPhoto, fetchVideos } from "../api/mediaApi";
-import { setError, setLoading, setResults } from "../redux/features/searchSlice";
+import {
+  setError,
+  setLoading,
+  setResults,
+  nextPage,
+} from "../redux/features/searchSlice";
 import ResultsCard from "./ResultsCard";
 
 const ResultGrid = () => {
-  const { query, activeTab, results, loading, error } = useSelector(
-    (store) => store.search
-  );
+  const search = useSelector((s) => s.search || {});
+  const {
+    query = "",
+    activeTab = "photos",
+    results = [],
+    loading = false,
+    error = null,
+    page = 1,
+    hasMore = false,
+  } = search;
+
   const dispatch = useDispatch();
 
+  // 🛑 Nothing searched
+  if (typeof query !== "string" || !query.trim()) {
+    return (
+      <p className="text-center text-gray-500 py-20">
+        Start typing to search photos, videos or GIFs 🔍
+      </p>
+    );
+  }
+
   useEffect(() => {
-    if (!query?.trim()) return;
+    if (!query.trim()) return;
 
     const getData = async () => {
       try {
         dispatch(setLoading());
         let data = [];
 
-        if (activeTab == "photos") {
-          let response = await fetchPhoto(query);
-          data = response.results.map((e) => ({
+        if (activeTab === "photos") {
+          const res = await fetchPhoto(query, page);
+          data = res?.results?.map((e) => ({
             id: e.id,
             type: "photo",
             title: e.alt_description,
             thumbnail: e.urls.small,
             src: e.urls.full,
-          }));
+          })) || [];
         }
 
-        if (activeTab == "videos") {
-          let response = await fetchVideos(query);
-          data = response.videos.map((e) => ({
+        if (activeTab === "videos") {
+          const res = await fetchVideos(query, page);
+          data = res?.videos?.map((e) => ({
             id: e.id,
             type: "video",
-            title: e.user || "video",
+            title: e.user?.name || "Video",
             thumbnail: e.image,
-            src: e.video_files[0].link,
-          }));
+            src: e.video_files?.[0]?.link,
+          })) || [];
         }
 
-        if (activeTab == "gifs") {
-          let response = await fetchGif(query);
-          data = response.data.results.map((e) => ({
+        if (activeTab === "gifs") {
+          const res = await fetchGif(query, page);
+          data = res?.results?.map((e) => ({
             id: e.id,
             type: "gif",
             title: e.title || "GIF",
-            thumbnail: e.media_formats.tinygif.url,
-            src: e.media_formats.gif.url,
-          }));
+            thumbnail: e.media_formats?.tinygif?.url,
+            src: e.media_formats?.gif?.url,
+          })) || [];
         }
 
         dispatch(setResults(data));
       } catch (err) {
-        dispatch(setError(err.message));
+        dispatch(setError(err?.message || "Failed to load data"));
       }
     };
 
     getData();
-  }, [query, activeTab, dispatch]);
+  }, [query, activeTab, page, dispatch]);
 
-  /* ---------- UI STATES (STYLING ONLY) ---------- */
-  if (loading)
-    return (
-      <div className="flex items-center justify-center py-24 text-gray-400 text-sm tracking-wide">
-        Loading results...
-      </div>
-    );
+  if (loading && page === 1)
+    return <p className="text-center text-gray-400 py-20">Loading...</p>;
 
   if (error)
-    return (
-      <div className="flex items-center justify-center py-24 text-red-400 text-sm">
-        Something went wrong. Try again.
-      </div>
-    );
+    return <p className="text-center text-red-400 py-20">{error}</p>;
 
-  /* ---------- RESULTS GRID ---------- */
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6 px-6 py-8">
-      {results.map((e, idx) => (
-        <ResultsCard key={idx} e={e} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
+        {results.map((e) => (
+          <ResultsCard key={e.id} e={e} />
+        ))}
+      </div>
+
+      {query.trim() && hasMore && !loading && results.length > 0 && (
+        <div className="flex justify-center mt-10">
+          <button
+            onClick={() => dispatch(nextPage())}
+            className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Load More
+          </button>
+        </div>
+      )}
+
+      {loading && page > 1 && (
+        <p className="text-center text-gray-400 mt-6">Loading more...</p>
+      )}
+    </>
   );
 };
 
